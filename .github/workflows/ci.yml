@@ -1,0 +1,54 @@
+# CI Workflow for WebScrape-Email-Social-Extractor-Ruby-CLI
+
+name: CI
+
+# Trigger the workflow on push events to the main branch and on pull requests to the main branch
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# Permissions can be set at the workflow level or job level
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        ruby-version: ["3.1", "3.2", "3.3", "3.4"] # Test against multiple Ruby versions
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby ${{ matrix.ruby-version }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true # Caches gems to speed up subsequent runs
+
+      - name: Install Dependencies
+        run: bundle install --jobs 4 --retry 3
+
+      - name: Run Linters & Formatters (e.g., RuboCop)
+        # Assuming RuboCop is the primary linter. Adapt if another is used.
+        # If Ruff was used (Python), this would be `ruff check .`
+        run: bundle exec rubocop --format github
+
+      - name: Run Tests with RSpec
+        # Assuming RSpec is the primary test runner. Adapt if another is used.
+        # If Pytest was used (Python), this would be `pytest`
+        run: bundle exec rspec
+
+      # Add more steps as needed, e.g., for code coverage reporting, static analysis tools, etc.
+      # For example, if Codecov was integrated:
+      # - name: Upload Coverage to Codecov
+      #   uses: codecov/codecodecov-action@v4
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     directory: ./coverage
